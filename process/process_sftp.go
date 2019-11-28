@@ -33,16 +33,27 @@ func naviSFTPDir(path string, info os.FileInfo, err error) error {
 	if filepath.Base(dir) != "recv" {
 		return nil
 	}
+	log.DEBUG(dir)
+	log.DEBUG(file)
 
-	fmt.Println(dir)
-	fmt.Println(file)
 	fileId := strings.TrimSuffix(file, filepath.Ext(file))
 	successFile := filepath.Join(dir, fileId+".success")
-	fmt.Println(successFile)
+	log.DEBUG(successFile)
+	//success 파일이 있는 경우 처리가 끝난 파일 이므로 skip
 	if _, err = os.Stat(successFile); err == nil {
 		return nil
 	}
-	runR()
+
+	//센터 코드와 파일 id를 가져오기 위해 file path 생성
+	sep := strings.Split(successFile, "_")
+	if len(sep) < 4 {
+		return nil
+	}
+	filePath := strings.Join(sep[:3], "_")
+	log.DEBUG(filePath)
+
+	//R 실행
+	runR(filePath, path)
 
 	return nil
 }

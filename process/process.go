@@ -1,6 +1,7 @@
 package process
 
 import (
+	"fasoo.com/fklagent/mapper"
 	"fasoo.com/fklagent/util/config"
 	"fasoo.com/fklagent/util/log"
 	"fmt"
@@ -8,10 +9,18 @@ import (
 	"os/exec"
 )
 
-func runR() {
-	rCmd := config.Cfg.RCmd
+func runR(filePath, dataFilePath string) {
+	attr, err := mapper.SelectCenterCodeANDTableIdByPath(filePath)
+	if err != nil {
+		return
+	}
+	log.DEBUG(attr.CenterCode)
+	log.DEBUG(attr.TableId)
 
-	cmd := exec.Command(rCmd, "--version")
+	rCmd := config.Cfg.RCmd
+	rScript := config.Cfg.RScriptPath
+
+	cmd := exec.Command(rCmd, rScript)
 	cmdOut, err := cmd.StdoutPipe()
 	if err != nil {
 		log.ERROR(err.Error())
@@ -29,12 +38,12 @@ func runR() {
 		log.ERROR(err.Error())
 		return
 	}
-	//outBytes, err := ioutil.ReadAll(cmdOut)
-	//if err != nil {
-	//	log.ERROR(err.Error())
-	//	return nil
-	//}
-	//fmt.Println(string(outBytes))
+	outBytes, err := ioutil.ReadAll(cmdOut)
+	if err != nil {
+		log.ERROR(err.Error())
+		return
+	}
+	fmt.Println(string(outBytes))
 
 	errBytes, err := ioutil.ReadAll(cmdErr)
 	if err != nil {
