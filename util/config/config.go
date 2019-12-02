@@ -18,8 +18,11 @@ type config struct {
 	SFTPPath string `properties:"data.sftp.path,default=/data1/dev/sftp"`
 	ESBPath  string `properties:"data.esb.path,default=/data1/dev/esb"`
 
-	RCmd        string `properties:"r.cmd,default=Rscript"`
-	RScriptPath string `properties:"r.script.path,default=hello_world.R"`
+	RCmd        string `properties:"r.cmd"`
+	RCmdParam   string `properties:"r.cmd.param"`
+	RScriptPath string `properties:"r.script.path"`
+	RResultPath string `properties:"r.result.path,default=/home/fasoo/R/result"`
+	RLogPath    string `properties:"r.log.path,default=/home/fasoo/R/log"`
 }
 
 var Cfg config

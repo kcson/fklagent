@@ -18,7 +18,7 @@ func SFTP() {
 
 }
 
-func naviSFTPDir(path string, info os.FileInfo, err error) error {
+func naviSFTPDir(dataFileFullPath string, info os.FileInfo, err error) error {
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -26,18 +26,18 @@ func naviSFTPDir(path string, info os.FileInfo, err error) error {
 	if info.IsDir() {
 		return nil
 	}
-	if filepath.Ext(path) != ".fin" {
+	if filepath.Ext(dataFileFullPath) != ".fin" {
 		return nil
 	}
-	dir, file := filepath.Split(path)
+	dir, file := filepath.Split(dataFileFullPath)
 	if filepath.Base(dir) != "recv" {
 		return nil
 	}
 	log.DEBUG(dir)
 	log.DEBUG(file)
 
-	fileId := strings.TrimSuffix(file, filepath.Ext(file))
-	successFile := filepath.Join(dir, fileId+".success")
+	fileIdWithTime := strings.TrimSuffix(file, filepath.Ext(file))
+	successFile := filepath.Join(dir, fileIdWithTime+".success")
 	log.DEBUG(successFile)
 	//success 파일이 있는 경우 처리가 끝난 파일 이므로 skip
 	if _, err = os.Stat(successFile); err == nil {
@@ -53,7 +53,7 @@ func naviSFTPDir(path string, info os.FileInfo, err error) error {
 	log.DEBUG(filePath)
 
 	//R 실행
-	runR(filePath, path)
+	runR(filePath, dataFileFullPath)
 
 	return nil
 }

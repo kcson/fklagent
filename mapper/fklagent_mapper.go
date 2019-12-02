@@ -29,7 +29,7 @@ func SelectQISA(centerCode, tableId string) ([]bean.Attr, error) {
 		`SELECT 
 					attr_dlmt,
 					fld_nm,
-					fld_eng_nm
+					COALESCE(fld_eng_nm,'') as fld_eng_nm
 				FROM
 					bbp_prd_tabown.data_attr_tbl_sttr
 				WHERE
