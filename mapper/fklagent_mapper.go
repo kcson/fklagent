@@ -41,3 +41,28 @@ func SelectQISA(centerCode, tableId string) ([]bean.Attr, error) {
 
 	return attrs, nil
 }
+
+func InsertKLResult(result *bean.KLResult) error {
+	_, err := db.DB.NamedExec(
+		`INSERT INTO 
+				bbp_prd_tabown.msrm_rslt_tbl_sttr (
+					strd_date,
+					cent_cd,
+					tbl_id,
+					msrm_dv,
+					msrm_rslt
+				)
+				VALUES (
+				    :strd_date,
+					:cent_cd,
+					:tbl_id,
+					:msrm_dv,
+					:msrm_rslt
+				)`,
+		result)
+	if err != nil {
+		log.ERROR(err.Error())
+		return err
+	}
+	return nil
+}

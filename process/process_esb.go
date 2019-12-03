@@ -17,7 +17,7 @@ func ESB() {
 
 }
 
-func naviESBDir(path string, info os.FileInfo, err error) error {
+func naviESBDir(dataFileFullPath string, info os.FileInfo, err error) error {
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -25,21 +25,27 @@ func naviESBDir(path string, info os.FileInfo, err error) error {
 	if info.IsDir() {
 		return nil
 	}
-	if filepath.Ext(path) != ".csv" {
+	if filepath.Ext(dataFileFullPath) != ".csv" {
 		return nil
 	}
-	dir, file := filepath.Split(path)
+	dir, file := filepath.Split(dataFileFullPath)
 	if filepath.Base(dir) != "recv" {
 		return nil
 	}
 	log.DEBUG(dir)
 	log.DEBUG(file)
 
-	fileId := strings.TrimSuffix(file, filepath.Ext(file))
-	successFile := filepath.Join(dir, fileId+".success")
+	fileIdWithTime := strings.TrimSuffix(file, filepath.Ext(file))
+	successFile := filepath.Join(dir, fileIdWithTime+".success")
 	log.DEBUG(successFile)
 	//success 파일이 있는 경우 처리가 끝난 파일 이므로 skip
 	if _, err = os.Stat(successFile); err == nil {
+		return nil
+	}
+	//결과 파일이 있으면 skip
+	resultPath := config.Cfg.RResultPath
+	resultFileFullPath := filepath.Join(resultPath, fileIdWithTime+".json")
+	if _, err = os.Stat(resultFileFullPath); err == nil {
 		return nil
 	}
 
@@ -51,7 +57,7 @@ func naviESBDir(path string, info os.FileInfo, err error) error {
 	filePath := strings.Join(sep[:4], "_")
 	log.DEBUG(filePath)
 
-	runR(filePath, path)
+	runR(filePath, dataFileFullPath)
 
 	return nil
 }

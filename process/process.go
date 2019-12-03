@@ -1,6 +1,8 @@
 package process
 
 import (
+	"encoding/json"
+	"fasoo.com/fklagent/bean"
 	"fasoo.com/fklagent/mapper"
 	"fasoo.com/fklagent/util/config"
 	"fasoo.com/fklagent/util/log"
@@ -8,19 +10,25 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 func runR(filePath, dataFileFullPath string) {
 	attr, err := mapper.SelectCenterCodeANDTableIdByPath(filePath)
 	if err != nil {
-		log.ERROR(err.Error())
+		log.ERROR(err.Error() + " : " + filePath)
 		return
 	}
 	log.DEBUG(attr.CenterCode)
 	log.DEBUG(attr.TableId)
 	qisas, err := mapper.SelectQISA(attr.CenterCode, attr.TableId)
 	if err != nil {
-		log.ERROR(err.Error())
+		log.ERROR(err.Error() + " : " + attr.CenterCode + " : " + attr.TableId)
+		return
+	}
+	if len(qisas) == 0 {
+		log.ERROR("Not found QI SA : " + attr.CenterCode + " : " + attr.TableId)
 		return
 	}
 
@@ -31,12 +39,12 @@ func runR(filePath, dataFileFullPath string) {
 		log.DEBUG(qisa.AttrDelimiter)
 		log.DEBUG(qisa.FieldName)
 		if qisa.AttrDelimiter == "QI" {
-			qi += `"` + qisa.FieldName + `"`
+			qi += `"` + strings.ToLower(qisa.FieldName) + `"`
 			if index != len(qisas)-1 {
 				qi += ","
 			}
 		} else if qisa.AttrDelimiter == "SA" {
-			sa += `"` + qisa.FieldName + `"`
+			sa += `"` + strings.ToLower(qisa.FieldName) + `"`
 			if index != len(qisas)-1 {
 				sa += ","
 			}
@@ -99,5 +107,65 @@ func runR(filePath, dataFileFullPath string) {
 	if err = cmd.Wait(); err != nil {
 		log.ERROR(err.Error())
 		return
+	}
+
+	//결과 파일 확인
+	resultPath := config.Cfg.RResultPath
+	_, dataFile := filepath.Split(dataFileFullPath)
+	fileIdWithTime := strings.TrimSuffix(dataFile, filepath.Ext(dataFile))
+
+	resultFileFullPath := filepath.Join(resultPath, fileIdWithTime+".json")
+	f, err := ioutil.ReadFile(resultFileFullPath)
+	if err != nil {
+		log.ERROR("result file error : " + err.Error() + " : " + resultFileFullPath)
+		return
+	}
+
+	rr := new(bean.RResult)
+	err = json.Unmarshal(f, rr)
+	if err != nil {
+		log.ERROR(err.Error())
+		return
+	}
+	temp := strings.Split(fileIdWithTime, "_")
+	date := temp[len(temp)-1]
+	log.DEBUG(date)
+
+	result := new(bean.KLResult)
+	result.ResultDate = date
+	result.CenterCode = attr.CenterCode
+	result.TableId = attr.TableId
+
+	//결과 저장
+	//K
+	result.ResultType = "K"
+	result.Result = strconv.Itoa(rr.K)
+	err = mapper.InsertKLResult(result)
+	if err != nil {
+		log.ERROR(err.Error())
+	}
+
+	//L_lwc_nm
+	result.ResultType = "L_lwc_nm"
+	result.Result = strconv.Itoa(rr.LLwcNm)
+	err = mapper.InsertKLResult(result)
+	if err != nil {
+		log.ERROR(err.Error())
+	}
+
+	//K_ERR_CNT
+	result.ResultType = "K_ERR_CNT"
+	result.Result = strconv.Itoa(rr.KErrCnt)
+	err = mapper.InsertKLResult(result)
+	if err != nil {
+		log.ERROR(err.Error())
+	}
+
+	//L_lwc_nm_ERR_CNT
+	result.ResultType = "L_lwc_nm_ERR_CNT"
+	result.Result = strconv.Itoa(rr.LLwcNmErrCnt)
+	err = mapper.InsertKLResult(result)
+	if err != nil {
+		log.ERROR(err.Error())
 	}
 }

@@ -43,6 +43,12 @@ func naviSFTPDir(dataFileFullPath string, info os.FileInfo, err error) error {
 	if _, err = os.Stat(successFile); err == nil {
 		return nil
 	}
+	//결과 파일이 있으면 skip
+	resultPath := config.Cfg.RResultPath
+	resultFileFullPath := filepath.Join(resultPath, fileIdWithTime+".json")
+	if _, err = os.Stat(resultFileFullPath); err == nil {
+		return nil
+	}
 
 	//센터 코드와 파일 id를 가져오기 위해 file path 생성
 	sep := strings.Split(successFile, "_")
