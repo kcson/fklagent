@@ -1,6 +1,7 @@
 package process
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fasoo.com/fklagent/bean"
 	"fasoo.com/fklagent/mapper"
@@ -8,15 +9,35 @@ import (
 	"fasoo.com/fklagent/util/log"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 )
 
+func successFileTouch(dataFileFullPath string) error {
+	dataDir, dataFile := filepath.Split(dataFileFullPath)
+	fileIdWithTime := strings.TrimSuffix(dataFile, filepath.Ext(dataFile))
+	successFileFullPath := filepath.Join(dataDir, fileIdWithTime+".success")
+	successFile, err := os.Create(successFileFullPath)
+	if err != nil {
+		return err
+	}
+	defer successFile.Close()
+	return nil
+}
+
 func runR(filePath, dataFileFullPath string) {
 	attr, err := mapper.SelectCenterCodeANDTableIdByPath(filePath)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			err = successFileTouch(dataFileFullPath)
+			if err != nil {
+				log.ERROR(err.Error() + " : " + filePath)
+			}
+			return
+		}
 		log.ERROR(err.Error() + " : " + filePath)
 		return
 	}
@@ -29,6 +50,11 @@ func runR(filePath, dataFileFullPath string) {
 	}
 	if len(qisas) == 0 {
 		log.ERROR("Not found QI SA : " + attr.CenterCode + " : " + attr.TableId)
+
+		err = successFileTouch(dataFileFullPath)
+		if err != nil {
+			log.ERROR(err.Error() + " : " + filePath)
+		}
 		return
 	}
 
