@@ -93,11 +93,14 @@ func runR(filePath, dataFileFullPath string) {
 	rScript := config.Cfg.RScriptPath
 	logPath := config.Cfg.RLogPath
 
-	dataDir, fileId := filepath.Split(filePath)
-	logPath = filepath.Join(logPath, fileId+".out")
+	//dataDir, fileId := filepath.Split(filePath)
+	dataDir, dataFileName := filepath.Split(dataFileFullPath)
+	dataParam := strings.TrimSuffix(dataFileName, filepath.Ext(dataFileName))
+	dataFileParam := dataParam + ".csv"
+	logPath = filepath.Join(logPath, dataParam+".out")
 
 	//args := fmt.Sprintf("'--args %s %s %s %s %s %s'", `"/data1/dev/sftp/bbp14/recv"`, `"F_BBP14_00006"`, `c("qi1","qi2")`, `c("sa1","sa2")`, `"BBP14"`, `"TBBP14_ID_06"`)
-	cmd := exec.Command(rCmd, dataDir, fileId, qi, sa, attr.CenterCode, attr.TableId, rScript, logPath)
+	cmd := exec.Command(rCmd, dataDir, dataFileParam, qi, sa, attr.CenterCode, attr.TableId, rScript, logPath)
 	fmt.Println(cmd.String())
 	cmdOut, err := cmd.StdoutPipe()
 	if err != nil {
@@ -137,8 +140,8 @@ func runR(filePath, dataFileFullPath string) {
 
 	//결과 파일 확인
 	resultPath := config.Cfg.RResultPath
-	_, dataFile := filepath.Split(dataFileFullPath)
-	fileIdWithTime := strings.TrimSuffix(dataFile, filepath.Ext(dataFile))
+	//_, dataFile := filepath.Split(dataFileFullPath)
+	fileIdWithTime := strings.TrimSuffix(dataFileName, filepath.Ext(dataFileName))
 
 	resultFileFullPath := filepath.Join(resultPath, fileIdWithTime+".json")
 	f, err := ioutil.ReadFile(resultFileFullPath)
@@ -155,6 +158,9 @@ func runR(filePath, dataFileFullPath string) {
 	}
 	temp := strings.Split(fileIdWithTime, "_")
 	date := temp[len(temp)-1]
+	if len(date) != 8 {
+		date = temp[len(temp)-2] + "_" + date
+	}
 	log.DEBUG(date)
 
 	result := new(bean.KLResult)
