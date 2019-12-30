@@ -150,8 +150,9 @@ func runR(filePath, dataFileFullPath string) {
 		return
 	}
 
-	rr := new(bean.RResult)
-	err = json.Unmarshal(f, rr)
+	//rr := new(bean.RResult)
+	rMap := make(map[string]interface{})
+	err = json.Unmarshal(f, &rMap)
 	if err != nil {
 		log.ERROR(err.Error())
 		return
@@ -169,35 +170,51 @@ func runR(filePath, dataFileFullPath string) {
 	result.TableId = attr.TableId
 
 	//결과 저장
+	for k, v := range rMap {
+		if strings.HasPrefix(k, "K") || strings.HasPrefix(k, "L") {
+			log.DEBUG(k + " : " + strconv.Itoa(int(v.(float64))))
+			result.ResultType = k
+			result.Result = strconv.Itoa(int(v.(float64)))
+			err = mapper.InsertKLResult(result)
+			if err != nil {
+				log.ERROR(err.Error())
+			}
+		}
+	}
+	//결과 저장
 	//K
-	result.ResultType = "K"
-	result.Result = strconv.Itoa(rr.K)
-	err = mapper.InsertKLResult(result)
-	if err != nil {
-		log.ERROR(err.Error())
-	}
+	//if strings.Compare(qi, `c("")`) != 0 {
+	//	result.ResultType = "K"
+	//	result.Result = strconv.Itoa(rr.K)
+	//	err = mapper.InsertKLResult(result)
+	//	if err != nil {
+	//		log.ERROR(err.Error())
+	//	}
+	//
+	//	//K_ERR_CNT
+	//	result.ResultType = "K_ERR_CNT"
+	//	result.Result = strconv.Itoa(rr.KErrCnt)
+	//	err = mapper.InsertKLResult(result)
+	//	if err != nil {
+	//		log.ERROR(err.Error())
+	//	}
+	//}
 
-	//L_lwc_nm
-	result.ResultType = "L_lwc_nm"
-	result.Result = strconv.Itoa(rr.LLwcNm)
-	err = mapper.InsertKLResult(result)
-	if err != nil {
-		log.ERROR(err.Error())
-	}
-
-	//K_ERR_CNT
-	result.ResultType = "K_ERR_CNT"
-	result.Result = strconv.Itoa(rr.KErrCnt)
-	err = mapper.InsertKLResult(result)
-	if err != nil {
-		log.ERROR(err.Error())
-	}
-
-	//L_lwc_nm_ERR_CNT
-	result.ResultType = "L_lwc_nm_ERR_CNT"
-	result.Result = strconv.Itoa(rr.LLwcNmErrCnt)
-	err = mapper.InsertKLResult(result)
-	if err != nil {
-		log.ERROR(err.Error())
-	}
+	//if strings.Compare(sa, `c("")`) != 0 {
+	//	//L_lwc_nm
+	//	result.ResultType = "L_lwc_nm"
+	//	result.Result = strconv.Itoa(rr.LLwcNm)
+	//	err = mapper.InsertKLResult(result)
+	//	if err != nil {
+	//		log.ERROR(err.Error())
+	//	}
+	//
+	//	//L_lwc_nm_ERR_CNT
+	//	result.ResultType = "L_lwc_nm_ERR_CNT"
+	//	result.Result = strconv.Itoa(rr.LLwcNmErrCnt)
+	//	err = mapper.InsertKLResult(result)
+	//	if err != nil {
+	//		log.ERROR(err.Error())
+	//	}
+	//}
 }
