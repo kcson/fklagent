@@ -59,32 +59,25 @@ func runR(filePath, dataFileFullPath string) {
 	}
 
 	//"c(\"qi1\",\"qi2\")"
-	qi := "c("
-	sa := "c("
-	for index, qisa := range qisas {
-		log.DEBUG(qisa.AttrDelimiter)
-		log.DEBUG(qisa.FieldName)
+	var qi, sa string
+	var qis, sas []string
+	for _, qisa := range qisas {
+		log.DEBUG(qisa.AttrDelimiter + " : " + qisa.FieldName)
 		if qisa.AttrDelimiter == "QI" {
-			qi += `"` + strings.ToLower(qisa.FieldName) + `"`
-			if index != len(qisas)-1 {
-				qi += ","
-			}
+			qis = append(qis, `"`+strings.ToLower(qisa.FieldName)+`"`)
 		} else if qisa.AttrDelimiter == "SA" {
-			sa += `"` + strings.ToLower(qisa.FieldName) + `"`
-			if index != len(qisas)-1 {
-				sa += ","
-			}
+			sas = append(sas, `"`+strings.ToLower(qisa.FieldName)+`"`)
 		}
 	}
-	if qi == "c(" {
+	if qis == nil {
 		qi = `c("")`
 	} else {
-		qi += ")"
+		qi = "c(" + strings.Join(qis, ",") + ")"
 	}
-	if sa == "c(" {
+	if sas == nil {
 		sa = `c("")`
 	} else {
-		sa += ")"
+		sa = "c(" + strings.Join(sas, ",") + ")"
 	}
 
 	//R CMD BATCH --vanilla '--args "/data1/dev/sftp/bbp14/recv" "F_BBP14_00006" c("qi1","qi2") c("sa1","sa2") "BBP14" "TBBP14_ID_06"' /home/fasoo/R/script/r_script_fasoo.R.bak /home/fasoo/R/log/F_BBP14_00006.out
